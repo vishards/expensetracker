@@ -1,373 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, user-scalable=no"
-  />
-  <title>Travel Expense Tracker</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="theme-color" content="#0ea5e9" />
-  <style>
-    input, button, select, textarea { -webkit-tap-highlight-color: transparent; }
-    input, select, textarea { font-size: 16px; } /* prevent iOS zoom */
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trip Expense Tracker</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-sky-50 text-slate-800 min-h-screen">
-  <div class="max-w-md mx-auto min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="sticky top-0 z-20 bg-sky-600 text-white px-4 py-3 shadow">
-      <div class="flex items-center justify-between">
-        <h1 class="text-lg font-semibold">Trip Expense Tracker</h1>
-        <div class="space-x-2">
-          <button id="openStartModal" class="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 active:bg-white/40">Start Trip</button>
-          <button id="openEndModal" class="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 active:bg-white/40">End Trip</button>
-        </div>
-      </div>
-    </header>
+<body class="bg-gray-100 p-4">
 
-    <!-- Main -->
-    <main class="flex-1 px-4 pb-28 pt-4 space-y-4">
-      <!-- Status -->
-      <div id="statusBar" class="text-sm text-slate-600"></div>
+<!-- Header -->
+<h1 class="text-center text-2xl font-bold mb-4">Trip Expense Tracker</h1>
 
-      <!-- Section 1: Fuel Entry (vertical, no overflow) -->
-      <section class="bg-white rounded-2xl shadow p-4">
-        <h2 class="font-semibold mb-3">Fuel Entry</h2>
-        <form id="fuelForm" class="space-y-3">
-          <div>
-            <label for="fuelOdo" class="block text-sm mb-1">Odometer (km)</label>
-            <input id="fuelOdo" type="number" step="0.1" inputmode="decimal"
-              class="w-full border rounded-lg px-3 py-2" required>
-          </div>
-          <div>
-            <label for="fuelLiters" class="block text-sm mb-1">Liters</label>
-            <input id="fuelLiters" type="number" step="0.01" inputmode="decimal"
-              class="w-full border rounded-lg px-3 py-2" required>
-          </div>
-          <div>
-            <label for="fuelPrice" class="block text-sm mb-1">₹ / Liter</label>
-            <input id="fuelPrice" type="number" step="0.01" inputmode="decimal"
-              class="w-full border rounded-lg px-3 py-2" required>
-          </div>
-          <button class="w-full bg-sky-600 text-white py-2.5 rounded-xl">Add Fuel</button>
-          <p class="text-xs text-slate-500">Note: Only start & end fuel bars are used in economy/cost math.</p>
-        </form>
-      </section>
+<!-- Top Buttons -->
+<div class="flex justify-center gap-4 mb-6">
+  <button onclick="openStartTripModal()" class="bg-green-500 text-white px-4 py-2 rounded-lg">Start Trip</button>
+  <button onclick="openEndTripModal()" class="bg-red-500 text-white px-4 py-2 rounded-lg">End Trip</button>
+</div>
 
-      <!-- Section 2: Misc Expense (dropdown) -->
-      <section class="bg-white rounded-2xl shadow p-4">
-        <h2 class="font-semibold mb-3">Expense Entry</h2>
-        <form id="miscForm" class="space-y-3">
-          <div>
-            <label for="miscCategory" class="block text-sm mb-1">Category</label>
-            <select id="miscCategory" class="w-full border rounded-lg px-3 py-2" required>
-              <option value="">Select</option>
-              <option>Food</option>
-              <option>Parking</option>
-              <option>Toll</option>
-              <option>Misc</option>
-              <option>Accommodation</option>
-            </select>
-          </div>
-          <div>
-            <label for="miscAmount" class="block text-sm mb-1">Amount (₹)</label>
-            <input id="miscAmount" type="number" step="0.01" inputmode="decimal"
-              class="w-full border rounded-lg px-3 py-2" required>
-          </div>
-          <button class="w-full bg-violet-600 text-white py-2.5 rounded-xl">Add Expense</button>
-        </form>
-      </section>
-
-      <!-- Log Section (single-column list) -->
-      <section class="bg-white rounded-2xl shadow p-4">
-        <h2 class="font-semibold mb-3">Log</h2>
-        <ul id="logList" class="space-y-2 text-sm"></ul>
-      </section>
-
-      <!-- Summary (hidden until trip ends) -->
-      <section id="summaryCard" class="bg-white rounded-2xl shadow p-4 hidden">
-        <h2 class="font-semibold mb-3">Trip Summary</h2>
-        <div id="summaryContent" class="space-y-1 text-sm"></div>
-        <button id="btnCopySummary" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl mt-3">Copy Summary</button>
-      </section>
-    </main>
+<!-- Section 1: Fuel Entry -->
+<div class="bg-white p-4 rounded-lg shadow mb-4">
+  <h2 class="font-semibold mb-2">Add Fuel Entry</h2>
+  <div class="mb-2">
+    <label class="block text-sm">Odometer (km)</label>
+    <input type="number" id="fuelOdo" class="w-full border rounded px-2 py-1">
   </div>
+  <div class="mb-2">
+    <label class="block text-sm">Liters</label>
+    <input type="number" id="fuelLiters" class="w-full border rounded px-2 py-1">
+  </div>
+  <div class="mb-2">
+    <label class="block text-sm">₹ / Liter</label>
+    <input type="number" id="fuelPrice" class="w-full border rounded px-2 py-1">
+  </div>
+  <button onclick="addFuelEntry()" class="bg-blue-500 text-white px-3 py-1 rounded">Add Fuel</button>
+</div>
 
-  <!-- Toast (for validation/messages) -->
-  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 hidden bg-slate-900 text-white text-sm px-3 py-2 rounded-full shadow"></div>
+<!-- Section 2: Misc Expense -->
+<div class="bg-white p-4 rounded-lg shadow mb-4">
+  <h2 class="font-semibold mb-2">Add Misc Expense</h2>
+  <div class="mb-2">
+    <label class="block text-sm">Category</label>
+    <select id="miscCategory" class="w-full border rounded px-2 py-1">
+      <option value="Food">Food</option>
+      <option value="Parking">Parking</option>
+      <option value="Toll">Toll</option>
+      <option value="Misc">Misc</option>
+      <option value="Accommodation">Accommodation</option>
+    </select>
+  </div>
+  <div class="mb-2">
+    <label class="block text-sm">Amount (₹)</label>
+    <input type="number" id="miscAmount" class="w-full border rounded px-2 py-1">
+  </div>
+  <button onclick="addMiscEntry()" class="bg-blue-500 text-white px-3 py-1 rounded">Add Expense</button>
+</div>
 
-  <!-- Modal Backdrop -->
-  <div id="modalBg" class="hidden fixed inset-0 z-40 bg-black/40"></div>
+<!-- Log Section -->
+<div class="bg-white p-4 rounded-lg shadow mb-4">
+  <h2 class="font-semibold mb-2">Log</h2>
+  <ul id="logList" class="space-y-1"></ul>
+</div>
 
-  <!-- Start Trip Modal -->
-  <div id="startTripModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-    <div class="w-full max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow p-4">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="font-semibold">Start New Trip</h3>
-        <button data-close="startTripModal" class="px-2 py-1 text-slate-500">✕</button>
-      </div>
-      <form id="startTripForm" class="space-y-3">
-        <div>
-          <label for="startOdo" class="block text-sm mb-1">Initial Odometer (km)</label>
-          <input id="startOdo" type="number" inputmode="numeric" class="w-full border rounded-lg px-3 py-2" required>
-        </div>
-        <div>
-          <label for="startBars" class="block text-sm mb-1">Starting Fuel Bars (0–10)</label>
-          <input id="startBars" type="number" min="0" max="10" step="1" inputmode="numeric"
-            class="w-full border rounded-lg px-3 py-2" required>
-        </div>
-        <div class="flex gap-2 justify-end pt-1">
-          <button type="button" data-close="startTripModal" class="px-3 py-2 rounded-xl bg-slate-200">Cancel</button>
-          <button class="px-3 py-2 rounded-xl bg-sky-600 text-white">Start</button>
-        </div>
-      </form>
+<!-- Summary Section -->
+<div id="summarySection" class="bg-white p-4 rounded-lg shadow hidden">
+  <h2 class="font-semibold mb-2">Trip Summary</h2>
+  <div id="summaryContent" class="text-sm"></div>
+  <button onclick="copySummary()" class="mt-3 bg-gray-700 text-white px-3 py-1 rounded">Copy Summary</button>
+</div>
+
+<!-- Start Trip Modal -->
+<div id="startTripModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+  <div class="bg-white p-4 rounded-lg w-80">
+    <h3 class="font-semibold mb-2">Start New Trip</h3>
+    <label class="block text-sm">Start Odometer (km)</label>
+    <input type="number" id="startOdo" class="w-full border rounded px-2 py-1 mb-2">
+    <label class="block text-sm">Start Fuel Bars (0-10)</label>
+    <input type="number" id="startBars" class="w-full border rounded px-2 py-1 mb-4">
+    <div class="flex justify-end gap-2">
+      <button onclick="closeStartTripModal()" class="px-3 py-1 border rounded">Cancel</button>
+      <button onclick="startTrip()" class="bg-green-500 text-white px-3 py-1 rounded">Save</button>
     </div>
   </div>
+</div>
 
-  <!-- End Trip Modal -->
-  <div id="endTripModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-    <div class="w-full max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow p-4">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="font-semibold">End Trip</h3>
-        <button data-close="endTripModal" class="px-2 py-1 text-slate-500">✕</button>
-      </div>
-      <form id="endTripForm" class="space-y-3">
-        <div>
-          <label for="endOdo" class="block text-sm mb-1">Final Odometer (km)</label>
-          <input id="endOdo" type="number" inputmode="numeric" class="w-full border rounded-lg px-3 py-2" required>
-        </div>
-        <div>
-          <label for="endBars" class="block text-sm mb-1">Final Fuel Bars (0–10)</label>
-          <input id="endBars" type="number" min="0" max="10" step="1" inputmode="numeric"
-            class="w-full border rounded-lg px-3 py-2" required>
-        </div>
-        <div class="flex gap-2 justify-end pt-1">
-          <button type="button" data-close="endTripModal" class="px-3 py-2 rounded-xl bg-slate-200">Cancel</button>
-          <button class="px-3 py-2 rounded-xl bg-rose-600 text-white">End</button>
-        </div>
-      </form>
+<!-- End Trip Modal -->
+<div id="endTripModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+  <div class="bg-white p-4 rounded-lg w-80">
+    <h3 class="font-semibold mb-2">End Trip</h3>
+    <label class="block text-sm">End Odometer (km)</label>
+    <input type="number" id="endOdo" class="w-full border rounded px-2 py-1 mb-2">
+    <label class="block text-sm">End Fuel Bars (0-10)</label>
+    <input type="number" id="endBars" class="w-full border rounded px-2 py-1 mb-4">
+    <div class="flex justify-end gap-2">
+      <button onclick="closeEndTripModal()" class="px-3 py-1 border rounded">Cancel</button>
+      <button onclick="endTrip()" class="bg-red-500 text-white px-3 py-1 rounded">Save</button>
     </div>
   </div>
+</div>
 
 <script>
-  const BAR_TO_LITER = 4.5;
-  let trip = JSON.parse(localStorage.getItem('tripData') || 'null');
+let tripData = JSON.parse(localStorage.getItem("tripData")) || {};
 
-  const $ = (sel) => document.querySelector(sel);
-  function toast(msg){
-    const t = $('#toast');
-    t.textContent = msg; t.classList.remove('hidden');
-    clearTimeout(toast._t);
-    toast._t = setTimeout(()=> t.classList.add('hidden'), 1800);
-  }
-  function save(){ localStorage.setItem('tripData', JSON.stringify(trip)); }
-  function money(n){ return `₹${(Math.round(n*100)/100).toFixed(2)}`; }
+function openStartTripModal(){ document.getElementById("startTripModal").classList.remove("hidden"); }
+function closeStartTripModal(){ document.getElementById("startTripModal").classList.add("hidden"); }
+function openEndTripModal(){ document.getElementById("endTripModal").classList.remove("hidden"); }
+function closeEndTripModal(){ document.getElementById("endTripModal").classList.add("hidden"); }
 
-  // Modal helpers
-  function openModal(id){ $('#modalBg').classList.remove('hidden'); $('#'+id).classList.remove('hidden'); }
-  function closeModal(id){ $('#modalBg').classList.add('hidden'); $('#'+id).classList.add('hidden'); }
-  $('#modalBg').addEventListener('click', ()=> {
-    document.querySelectorAll('[id$="Modal"]').forEach(m=>m.classList.add('hidden'));
-    $('#modalBg').classList.add('hidden');
+function startTrip(){
+  const startOdo = parseFloat(document.getElementById("startOdo").value);
+  const startBars = parseInt(document.getElementById("startBars").value);
+  if(isNaN(startOdo) || isNaN(startBars) || startBars<0 || startBars>10){ alert("Enter valid data"); return; }
+  tripData = { startOdo, startBars, endOdo:null, endBars:null, fuelEntries:[], miscEntries:[] };
+  localStorage.setItem("tripData", JSON.stringify(tripData));
+  document.getElementById("logList").innerHTML = "";
+  document.getElementById("summarySection").classList.add("hidden");
+  document.getElementById("summaryContent").innerHTML = "";
+  closeStartTripModal();
+}
+
+function addFuelEntry(){
+  const odo = parseFloat(document.getElementById("fuelOdo").value);
+  const liters = parseFloat(document.getElementById("fuelLiters").value);
+  const price = parseFloat(document.getElementById("fuelPrice").value);
+  if(!tripData.startOdo){ alert("Start trip first"); return; }
+  if(isNaN(odo) || isNaN(liters) || isNaN(price) || liters<=0 || price<=0){ alert("Enter valid data"); return; }
+  if(tripData.fuelEntries.length && odo <= tripData.fuelEntries.slice(-1)[0].odo){ alert("Odometer must increase"); return; }
+  tripData.fuelEntries.push({odo, liters, price});
+  localStorage.setItem("tripData", JSON.stringify(tripData));
+  document.getElementById("fuelOdo").value = "";
+  document.getElementById("fuelLiters").value = "";
+  document.getElementById("fuelPrice").value = "";
+  renderLog();
+}
+
+function addMiscEntry(){
+  const cat = document.getElementById("miscCategory").value;
+  const amt = parseFloat(document.getElementById("miscAmount").value);
+  if(!tripData.startOdo){ alert("Start trip first"); return; }
+  if(isNaN(amt) || amt<=0){ alert("Enter valid amount"); return; }
+  tripData.miscEntries.push({cat, amt});
+  localStorage.setItem("tripData", JSON.stringify(tripData));
+  document.getElementById("miscAmount").value = "";
+  renderLog();
+}
+
+function renderLog(){
+  const logList = document.getElementById("logList");
+  logList.innerHTML = "";
+  tripData.fuelEntries.forEach((f,i)=>{
+    const li = document.createElement("li");
+    li.textContent = `Fuel: Odo ${f.odo} | ${f.liters} L @ ₹${f.price}`;
+    logList.appendChild(li);
   });
-  document.querySelectorAll('[data-close]').forEach(btn=>{
-    btn.addEventListener('click', ()=> closeModal(btn.getAttribute('data-close')));
+  tripData.miscEntries.forEach((m,i)=>{
+    const li = document.createElement("li");
+    li.textContent = `${m.cat}: ₹${m.amt}`;
+    logList.appendChild(li);
   });
+}
 
-  // Buttons to open modals
-  $('#openStartModal').addEventListener('click', ()=> openModal('startTripModal'));
-  $('#openEndModal').addEventListener('click', ()=> openModal('endTripModal'));
+function endTrip(){
+  const endOdo = parseFloat(document.getElementById("endOdo").value);
+  const endBars = parseInt(document.getElementById("endBars").value);
+  if(isNaN(endOdo) || isNaN(endBars) || endBars<0 || endBars>10){ alert("Enter valid data"); return; }
+  tripData.endOdo = endOdo;
+  tripData.endBars = endBars;
+  localStorage.setItem("tripData", JSON.stringify(tripData));
+  closeEndTripModal();
+  showSummary();
+}
 
-  // Status + render
-  function latestOdo(){
-    const lastFuel = (trip?.fuelEntries||[]).slice(-1)[0];
-    return lastFuel ? lastFuel.odo : (trip?.startOdo ?? 0);
-  }
+function showSummary(){
+  const dist = tripData.endOdo - tripData.startOdo;
+  const fuelStart = tripData.startBars * 4.5;
+  const fuelEnd = tripData.endBars * 4.5;
+  const fuelPurchased = tripData.fuelEntries.reduce((sum,f)=> sum + f.liters, 0);
+  const totalFuelUsed = fuelPurchased + fuelStart - fuelEnd;
 
-  function renderStatus(){
-    if (!trip){
-      $('#statusBar').innerHTML = 'No active trip';
-      return;
-    }
-    let s = `Trip started at <b>${trip.startOdo} km</b>, start bars <b>${trip.startBars}</b>`;
-    if (trip.endOdo !== null && trip.endOdo !== undefined){
-      s += ` • Ended at <b>${trip.endOdo} km</b>, end bars <b>${trip.endBars}</b>`;
-    }
-    $('#statusBar').innerHTML = s;
-  }
+  const fuelCostPurchased = tripData.fuelEntries.reduce((sum,f)=> sum + (f.liters * f.price), 0);
+  const avgFuelPrice = fuelPurchased ? fuelCostPurchased / fuelPurchased : 0;
+  const fuelCostBarsDiff = (fuelStart - fuelEnd) * avgFuelPrice;
+  const totalFuelCost = fuelCostPurchased + fuelCostBarsDiff;
 
-  function renderLog(){
-    const list = $('#logList');
-    list.innerHTML = '';
-    if (!trip) return;
+  const categories = ["Food","Parking","Toll","Misc","Accommodation"];
+  const miscTotals = {};
+  categories.forEach(c=> miscTotals[c]=0);
+  tripData.miscEntries.forEach(m=> miscTotals[m.cat] += m.amt);
 
-    (trip.fuelEntries||[]).forEach((f, i)=>{
-      const li = document.createElement('li');
-      li.className = 'flex items-start justify-between gap-3 bg-slate-50 rounded-xl p-2';
-      li.innerHTML = `<div class="min-w-0">
-        <div class="font-medium">Fuel @ ${f.odo} km</div>
-        <div class="text-xs text-slate-600 break-words">${f.liters} L × ₹${f.price}</div>
-      </div>`;
-      const del = document.createElement('button');
-      del.className = 'text-rose-600 text-xs px-2 py-1 border border-rose-200 rounded shrink-0';
-      del.textContent = 'Delete';
-      del.addEventListener('click', ()=>{
-        trip.fuelEntries.splice(i,1); save(); renderLog(); toast('Fuel entry deleted');
-      });
-      li.appendChild(del);
-      list.appendChild(li);
-    });
+  const totalMiscCost = Object.values(miscTotals).reduce((a,b)=>a+b,0);
+  const totalExpense = totalFuelCost + totalMiscCost;
+  const fuelEconomy = totalFuelUsed > 0 ? (dist / totalFuelUsed).toFixed(2) : 0;
 
-    (trip.miscEntries||[]).forEach((m, i)=>{
-      const li = document.createElement('li');
-      li.className = 'flex items-start justify-between gap-3 bg-slate-50 rounded-xl p-2';
-      li.innerHTML = `<div class="min-w-0">
-        <div class="font-medium">${m.category}</div>
-        <div class="text-xs text-slate-600 break-words">${money(m.amount)}</div>
-      </div>`;
-      const del = document.createElement('button');
-      del.className = 'text-rose-600 text-xs px-2 py-1 border border-rose-200 rounded shrink-0';
-      del.textContent = 'Delete';
-      del.addEventListener('click', ()=>{
-        trip.miscEntries.splice(i,1); save(); renderLog(); toast('Expense deleted');
-      });
-      li.appendChild(del);
-      list.appendChild(li);
-    });
-  }
+  let summaryHtml = `<p><strong>Total Distance:</strong> ${dist} km</p>`;
+  summaryHtml += `<p><strong>Total Fuel Used:</strong> ${totalFuelUsed.toFixed(2)} L</p>`;
+  summaryHtml += `<p><strong>Fuel Cost:</strong> ₹${totalFuelCost.toFixed(2)}</p>`;
+  summaryHtml += `<p><strong>Expenses:</strong></p><ul class="list-disc pl-5">`;
+  categories.forEach(c=> summaryHtml += `<li>${c}: ₹${miscTotals[c].toFixed(2)}</li>`);
+  summaryHtml += `</ul>`;
+  summaryHtml += `<p><strong>Total Expense:</strong> ₹${totalExpense.toFixed(2)}</p>`;
+  summaryHtml += `<p><strong>Fuel Economy:</strong> ${fuelEconomy} km/L</p>`;
 
-  function renderSummary(){
-    if (!trip || trip.endOdo===null || trip.endOdo===undefined) { $('#summaryCard').classList.add('hidden'); return; }
+  document.getElementById("summaryContent").innerHTML = summaryHtml;
+  document.getElementById("summarySection").classList.remove("hidden");
+}
 
-    const distance = Math.max(0, (trip.endOdo - trip.startOdo) || 0);
-    const fuelPurchased = (trip.fuelEntries||[]).reduce((a,f)=> a + (Number(f.liters)||0), 0);
-    const fuelCostPurchased = (trip.fuelEntries||[]).reduce((a,f)=> a + (Number(f.liters)||0)*(Number(f.price)||0), 0);
-    const avgPrice = fuelPurchased > 0 ? (fuelCostPurchased / fuelPurchased) : 0;
+function copySummary(){
+  const text = document.getElementById("summaryContent").innerText;
+  navigator.clipboard.writeText(text).then(()=> alert("Summary copied to clipboard!"));
+}
 
-    const startFuelL = (Number(trip.startBars)||0) * BAR_TO_LITER;
-    const endFuelL   = (Number(trip.endBars)||0)   * BAR_TO_LITER;
-    const netBarChangeL = startFuelL - endFuelL; // positive means consumed from tank
-
-    const totalFuelUsed = fuelPurchased + netBarChangeL; // liters
-    const barCost = netBarChangeL * avgPrice;            // can be negative if ended with more fuel
-    const totalFuelCost = fuelCostPurchased + barCost;
-
-    const cats = ['Food','Parking','Toll','Misc','Accommodation'];
-    const catTotals = Object.fromEntries(cats.map(c=>[c,0]));
-    (trip.miscEntries||[]).forEach(m => {
-      if (!catTotals.hasOwnProperty(m.category)) catTotals[m.category] = 0;
-      catTotals[m.category] += Number(m.amount)||0;
-    });
-    const totalMisc = Object.values(catTotals).reduce((a,b)=>a+b,0);
-    const totalExpense = totalFuelCost + totalMisc;
-    const economy = totalFuelUsed > 0 ? (distance / totalFuelUsed) : 0;
-
-    $('#summaryContent').innerHTML = `
-      <div>Total Distance: <b>${distance.toFixed(1)}</b> km</div>
-      <div>Total Fuel Used: <b>${totalFuelUsed.toFixed(2)}</b> L</div>
-      <div>Average Fuel Price: <b>${money(avgPrice)}</b> / L</div>
-      <div>Fuel Cost: <b>${money(totalFuelCost)}</b></div>
-      <div class="mt-2 font-semibold">Expenses:</div>
-      <div class="space-y-0.5">
-        ${Object.entries(catTotals).map(([k,v])=>`<div>${k}: <b>${money(v)}</b></div>`).join('')}
-      </div>
-      <div class="mt-2">Total Expense: <b>${money(totalExpense)}</b></div>
-      <div>Fuel Economy: <b>${economy.toFixed(2)}</b> km/L</div>
-    `;
-    $('#summaryCard').classList.remove('hidden');
-  }
-
-  function renderAll(){
-    renderStatus();
-    renderLog();
-    renderSummary();
-  }
-
-  // Forms
-  $('#startTripForm').addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const startOdo = parseFloat($('#startOdo').value);
-    const startBars = parseInt($('#startBars').value,10);
-    if (!Number.isFinite(startOdo) || !Number.isInteger(startBars) || startBars<0 || startBars>10){
-      toast('Enter valid start odometer & bars (0–10)');
-      return;
-    }
-    // Reset data
-    trip = { startOdo, startBars, fuelEntries: [], miscEntries: [], endOdo: null, endBars: null };
-    save();
-    // Clear & hide summary
-    $('#summaryContent').innerHTML = '';
-    $('#summaryCard').classList.add('hidden');
-    closeModal('startTripModal');
-    // Reset forms
-    $('#fuelForm').reset(); $('#miscForm').reset();
-    renderAll();
-    toast('Trip started');
-  });
-
-  $('#endTripForm').addEventListener('submit', (e)=>{
-    e.preventDefault();
-    if (!trip){ toast('Start a trip first'); return; }
-    const endOdo = parseFloat($('#endOdo').value);
-    const endBars = parseInt($('#endBars').value,10);
-    const last = latestOdo();
-    if (!Number.isFinite(endOdo) || endOdo < last){
-      toast(`Final odometer must be ≥ ${last}`);
-      return;
-    }
-    if (!Number.isInteger(endBars) || endBars<0 || endBars>10){
-      toast('Final bars must be 0–10'); return;
-    }
-    trip.endOdo = endOdo; trip.endBars = endBars; save();
-    closeModal('endTripModal');
-    renderAll();
-    toast('Trip ended');
-  });
-
-  $('#fuelForm').addEventListener('submit', (e)=>{
-    e.preventDefault();
-    if (!trip){ toast('Start a trip first'); return; }
-    const odo = parseFloat($('#fuelOdo').value);
-    const liters = parseFloat($('#fuelLiters').value);
-    const price = parseFloat($('#fuelPrice').value);
-    const minOdo = latestOdo();
-    if (!Number.isFinite(odo) || odo <= minOdo){ toast(`Odometer must be > ${minOdo}`); return; }
-    if (!Number.isFinite(liters) || liters<=0){ toast('Enter liters'); return; }
-    if (!Number.isFinite(price) || price<0){ toast('Enter ₹/L'); return; }
-    trip.fuelEntries.push({ odo, liters, price });
-    save();
-    e.target.reset();
-    renderAll();
-    toast('Fuel entry added');
-  });
-
-  $('#miscForm').addEventListener('submit', (e)=>{
-    e.preventDefault();
-    if (!trip){ toast('Start a trip first'); return; }
-    const category = $('#miscCategory').value;
-    const amount = parseFloat($('#miscAmount').value);
-    if (!category){ toast('Choose a category'); return; }
-    if (!Number.isFinite(amount) || amount<=0){ toast('Enter amount'); return; }
-    trip.miscEntries.push({ category, amount });
-    save();
-    e.target.reset();
-    renderAll();
-    toast('Expense added');
-  });
-
-  // Copy summary
-  $('#btnCopySummary').addEventListener('click', ()=>{
-    const text = $('#summaryContent').innerText.trim();
-    if (!text){ toast('Nothing to copy'); return; }
-    navigator.clipboard.writeText(text).then(()=> toast('Summary copied'));
-  });
-
-  // Initial paint
-  renderAll();
+if(tripData.startOdo){ renderLog(); }
 </script>
 </body>
 </html>

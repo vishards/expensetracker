@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Trip Expense Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-sky-50 text-slate-800 p-4 space-y-4">
+
+  <div class="flex justify-between">
+    <button id="openStartModal" class="bg-sky-500 text-white px-4 py-2 rounded">Start Trip</button>
+    <button id="openEndModal" class="bg-red-500 text-white px-4 py-2 rounded">End Trip</button>
+  </div>
+
+  <!-- Section 1: Fuel Entry -->
+  <form id="fuelForm" class="bg-white p-4 rounded shadow space-y-2">
+    <h2 class="font-bold">Fuel Entry</h2>
+    <div class="flex justify-between">
+      <label>Odometer (km)</label>
+      <input type="number" id="fuelOdo" step="0.1" class="border p-1 w-24 text-right" required>
+    </div>
+    <div class="flex justify-between">
+      <label>Liters</label>
+      <input type="number" id="fuelLiters" step="0.01" class="border p-1 w-24 text-right" required>
+    </div>
+    <div class="flex justify-between">
+      <label>₹/Liter</label>
+      <input type="number" id="fuelPrice" step="0.01" class="border p-1 w-24 text-right" required>
+    </div>
+    <button class="bg-green-500 text-white px-4 py-2 rounded w-full">Add Fuel</button>
+  </form>
+
+  <!-- Section 2: Misc Expense -->
+  <form id="miscForm" class="bg-white p-4 rounded shadow space-y-2">
+    <h2 class="font-bold">Expense Entry</h2>
+    <div class="flex justify-between">
+      <label>Category</label>
+      <select id="miscDesc" class="border p-1 w-40" required>
+        <option value="">Select</option>
+        <option value="Food">Food</option>
+        <option value="Parking">Parking</option>
+        <option value="Toll">Toll</option>
+        <option value="Misc">Misc</option>
+        <option value="Accommodation">Accommodation</option>
+      </select>
+    </div>
+    <div class="flex justify-between">
+      <label>Amount (₹)</label>
+      <input type="number" id="miscAmount" step="0.01" class="border p-1 w-24 text-right" required>
+    </div>
+    <button class="bg-purple-500 text-white px-4 py-2 rounded w-full">Add Expense</button>
+  </form>
+
+  <!-- Log Section -->
+  <div id="log" class="bg-white p-4 rounded shadow space-y-2"></div>
+
+  <!-- Trip Summary -->
+  <div id="summary" class="bg-white p-4 rounded shadow space-y-2 hidden"></div>
+
+  <!-- Start Trip Modal -->
+  <div id="startModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+    <div class="bg-white p-4 rounded shadow w-80">
+      <h2 class="font-bold mb-2">Start Trip</h2>
+      <form id="startTripForm" class="space-y-2">
+        <div class="flex justify-between">
+          <label>Start Odo (km)</label>
+          <input type="number" id="startOdo" class="border p-1 w-24 text-right" required>
+        </div>
+        <div class="flex justify-between">
+          <label>Start Bars (0-10)</label>
+          <input type="number" id="startBars" min="0" max="10" step="0.5" class="border p-1 w-24 text-right" required>
+        </div>
+        <div class="flex justify-end space-x-2 mt-4">
+          <button type="button" id="closeStartModal" class="px-3 py-1 bg-gray-300 rounded">Cancel</button>
+          <button class="px-3 py-1 bg-sky-500 text-white rounded">Start</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- End Trip Modal -->
+  <div id="endModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+    <div class="bg-white p-4 rounded shadow w-80">
+      <h2 class="font-bold mb-2">End Trip</h2>
+      <form id="endTripForm" class="space-y-2">
+        <div class="flex justify-between">
+          <label>End Odo (km)</label>
+          <input type="number" id="endOdo" class="border p-1 w-24 text-right" required>
+        </div>
+        <div class="flex justify-between">
+          <label>End Bars (0-10)</label>
+          <input type="number" id="endBars" min="0" max="10" step="0.5" class="border p-1 w-24 text-right" required>
+        </div>
+        <div class="flex justify-end space-x-2 mt-4">
+          <button type="button" id="closeEndModal" class="px-3 py-1 bg-gray-300 rounded">Cancel</button>
+          <button class="px-3 py-1 bg-red-500 text-white rounded">End</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+const BAR_TO_LITER = 4.5;
+let trip = JSON.parse(localStorage.getItem('trip') || '{}');
+
+function saveTrip() {
+  localStorage.setItem('trip', JSON.stringify(trip));
+}
+
+function renderLog() {
+  const logDiv = document.getElementById('log');
+  logDiv.innerHTML = '<h2 class="font-bold">Log</h2>';
+  (trip.fuelEntries || []).forEach((f, i) => {
+    logDiv.innerHTML += `<div class="flex justify-between"><span>Fuel @ ${f.odo} km: ${f.liters}L @ ₹${f.price}/L</span><button onclick="delFuel(${i})" class="text-red-500">✕</button></div>`;
+  });
+  (trip.miscEntries || []).forEach((m, i) => {
+    logDiv.innerHTML += `<div class="flex justify-between"><span>${m.desc}: ₹${m.amount}</span><button onclick="delMisc(${i})" class="text-red-500">✕</button></div>`;
+  });
+}
+
+function renderSummary() {
+  const s = document.getElementById('summary');
+  const fuelEntries = trip.fuelEntries || [];
+  const miscEntries = trip.miscEntries || [];
+
+  const distance = trip.endOdo - trip.startOdo;
+  const fuelPurchased = fuelEntries.reduce((a, f) => a + f.liters, 0);
+  const totalFuelCostPurchase = fuelEntries.reduce((a, f) => a + f.liters * f.price, 0);
+  const avgFuelPrice = fuelPurchased ? totalFuelCostPurchase / fuelPurchased : 0;
+
+  const startFuelLiters = trip.startBars * BAR_TO_LITER;
+  const endFuelLiters = trip.endBars * BAR_TO_LITER;
+  const netBarChange = startFuelLiters - endFuelLiters;
+
+  const totalFuelUsed = fuelPurchased + netBarChange;
+  const barCost = netBarChange > 0 ? netBarChange * avgFuelPrice : netBarChange * avgFuelPrice;
+  const totalFuelCost = totalFuelCostPurchase + barCost;
+
+  const categories = {};
+  miscEntries.forEach(m => categories[m.desc] = (categories[m.desc] || 0) + m.amount);
+
+  const totalMisc = miscEntries.reduce((a, m) => a + m.amount, 0);
+  const totalExpense = totalFuelCost + totalMisc;
+  const fuelEconomy = totalFuelUsed > 0 ? distance / totalFuelUsed : 0;
+
+  s.innerHTML = `
+    <h2 class="font-bold">Trip Summary</h2>
+    <div>Total Distance: ${distance.toFixed(1)} km</div>
+    <div>Total Fuel Used: ${totalFuelUsed.toFixed(2)} L</div>
+    <div>Fuel Cost: ₹${totalFuelCost.toFixed(2)}</div>
+    <div class="mt-2 font-bold">Expenses:</div>
+    <ul class="list-disc ml-5">
+      ${Object.entries(categories).map(([cat, amt]) => `<li>${cat}: ₹${amt.toFixed(2)}</li>`).join('')}
+    </ul>
+    <div class="mt-2">Total Expense: ₹${totalExpense.toFixed(2)}</div>
+    <div>Fuel Economy: ${fuelEconomy.toFixed(2)} km/L</div>
+    <button onclick="copySummary()" class="mt-2 bg-blue-500 text-white px-4 py-1 rounded">Copy Summary</button>
+  `;
+  s.classList.remove('hidden');
+}
+
+function copySummary() {
+  const text = document.getElementById('summary').innerText;
+  navigator.clipboard.writeText(text);
+}
+
+function delFuel(i) {
+  trip.fuelEntries.splice(i, 1);
+  saveTrip();
+  renderLog();
+}
+
+function delMisc(i) {
+  trip.miscEntries.splice(i, 1);
+  saveTrip();
+  renderLog();
+}
+
+// Event listeners
+document.getElementById('openStartModal').onclick = () => document.getElementById('startModal').classList.remove('hidden');
+document.getElementById('closeStartModal').onclick = () => document.getElementById('startModal').classList.add('hidden');
+document.getElementById('openEndModal').onclick = () => document.getElementById('endModal').classList.remove('hidden');
+document.getElementById('closeEndModal').onclick = () => document.getElementById('endModal').classList.add('hidden');
+
+document.getElementById('startTripForm').onsubmit = e => {
+  e.preventDefault();
+  trip = { 
+    startOdo: parseFloat(document.getElementById('startOdo').value), 
+    startBars: parseFloat(document.getElementById('startBars').value),
+    fuelEntries: [],
+    miscEntries: []
+  };
+  saveTrip();
+  document.getElementById('startModal').classList.add('hidden');
+  renderLog();
+};
+
+document.getElementById('endTripForm').onsubmit = e => {
+  e.preventDefault();
+  trip.endOdo = parseFloat(document.getElementById('endOdo').value);
+  trip.endBars = parseFloat(document.getElementById('endBars').value);
+  saveTrip();
+  document.getElementById('endModal').classList.add('hidden');
+  renderSummary();
+};
+
+document.getElementById('fuelForm').onsubmit = e => {
+  e.preventDefault();
+  const odo = parseFloat(document.getElementById('fuelOdo').value);
+  if (trip.fuelEntries.length && odo <= trip.fuelEntries[trip.fuelEntries.length - 1].odo) {
+    alert("Odometer must increase!");
+    return;
+  }
+  trip.fuelEntries.push({
+    odo,
+    liters: parseFloat(document.getElementById('fuelLiters').value),
+    price: parseFloat(document.getElementById('fuelPrice').value)
+  });
+  saveTrip();
+  e.target.reset();
+  renderLog();
+};
+
+document.getElementById('miscForm').onsubmit = e => {
+  e.preventDefault();
+  trip.miscEntries.push({
+    desc: document.getElementById('miscDesc').value,
+    amount: parseFloat(document.getElementById('miscAmount').value)
+  });
+  saveTrip();
+  e.target.reset();
+  renderLog();
+};
+
+renderLog();
+if (trip.endOdo) renderSummary();
+</script>
+</body>
+</html>
+

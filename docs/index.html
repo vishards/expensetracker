@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trip Expense Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js");
+      });
+    }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-sky-500 text-white p-4 text-center">
+    <h1 class="text-xl font-bold">Trip Expense Tracker</h1>
+    <div class="flex justify-center space-x-4 mt-2">
+      <button id="startTripBtn" class="bg-white text-sky-600 px-4 py-2 rounded-lg font-medium">Start Trip</button>
+      <button id="endTripBtn" class="bg-white text-sky-600 px-4 py-2 rounded-lg font-medium">End Trip</button>
+    </div>
+  </header>
+
+  <main class="flex-1 p-4 space-y-6">
+    <!-- Fuel Entry Section -->
+    <section id="section1" class="bg-white rounded-xl shadow p-4">
+      <h2 class="font-semibold mb-2">Add Fuel Entry</h2>
+      <form id="fuelForm" class="space-y-2">
+        <div class="flex justify-between">
+          <label class="w-1/2">Odometer (km):</label>
+          <input type="number" id="fuelOdo" class="border p-1 rounded w-1/2" required />
+        </div>
+        <div class="flex justify-between">
+          <label class="w-1/2">Liters:</label>
+          <input type="number" id="fuelLiters" step="0.01" class="border p-1 rounded w-1/2" required />
+        </div>
+        <div class="flex justify-between">
+          <label class="w-1/2">₹/Liter:</label>
+          <input type="number" id="fuelPrice" step="0.01" class="border p-1 rounded w-1/2" required />
+        </div>
+        <button type="submit" class="bg-sky-500 text-white w-full py-2 rounded-lg">Add Fuel</button>
+      </form>
+    </section>
+
+    <!-- Misc Expenses -->
+    <section id="section2" class="bg-white rounded-xl shadow p-4">
+      <h2 class="font-semibold mb-2">Add Expense</h2>
+      <form id="miscForm" class="space-y-2">
+        <div class="flex justify-between">
+          <label class="w-1/2">Category:</label>
+          <select id="expenseType" class="border p-1 rounded w-1/2" required>
+            <option value="Food">Food</option>
+            <option value="Parking">Parking</option>
+            <option value="Toll">Toll</option>
+            <option value="Accommodation">Accommodation</option>
+            <option value="Misc">Misc</option>
+          </select>
+        </div>
+        <div class="flex justify-between">
+          <label class="w-1/2">Amount (₹):</label>
+          <input type="number" id="expenseAmount" step="0.01" class="border p-1 rounded w-1/2" required />
+        </div>
+        <button type="submit" class="bg-sky-500 text-white w-full py-2 rounded-lg">Add Expense</button>
+      </form>
+    </section>
+
+    <!-- Logs -->
+    <section id="logs" class="bg-white rounded-xl shadow p-4 hidden">
+      <h2 class="font-semibold mb-2">Entry Log</h2>
+      <ul id="logList" class="space-y-2 text-sm"></ul>
+    </section>
+
+    <!-- Trip Summary -->
+    <section id="summary" class="bg-white rounded-xl shadow p-4 hidden">
+      <h2 class="font-semibold mb-2">Trip Summary</h2>
+      <div id="summaryContent" class="text-sm"></div>
+      <button id="copySummaryBtn" class="mt-3 bg-sky-500 text-white px-4 py-2 rounded-lg">Copy Summary</button>
+    </section>
+  </main>
+
+  <!-- Modals -->
+  <div id="startTripModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl p-4 w-80">
+      <h2 class="font-semibold mb-2">Start Trip</h2>
+      <form id="startTripForm" class="space-y-2">
+        <div class="flex justify-between">
+          <label class="w-1/2">Start Odometer (km):</label>
+          <input type="number" id="startOdo" class="border p-1 rounded w-1/2" required />
+        </div>
+        <div class="flex justify-between">
+          <label class="w-1/2">Start Fuel Bars (0–10):</label>
+          <input type="number" id="startFuelBars" min="0" max="10" class="border p-1 rounded w-1/2" required />
+        </div>
+        <div class="flex space-x-2">
+          <button type="submit" class="bg-sky-500 text-white flex-1 py-2 rounded-lg">Save</button>
+          <button type="button" onclick="closeModal('startTripModal')" class="bg-gray-300 flex-1 py-2 rounded-lg">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="endTripModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl p-4 w-80">
+      <h2 class="font-semibold mb-2">End Trip</h2>
+      <form id="endTripForm" class="space-y-2">
+        <div class="flex justify-between">
+          <label class="w-1/2">End Odometer (km):</label>
+          <input type="number" id="endOdo" class="border p-1 rounded w-1/2" required />
+        </div>
+        <div class="flex justify-between">
+          <label class="w-1/2">End Fuel Bars (0–10):</label>
+          <input type="number" id="endFuelBars" min="0" max="10" class="border p-1 rounded w-1/2" required />
+        </div>
+        <div class="flex space-x-2">
+          <button type="submit" class="bg-sky-500 text-white flex-1 py-2 rounded-lg">Save</button>
+          <button type="button" onclick="closeModal('endTripModal')" class="bg-gray-300 flex-1 py-2 rounded-lg">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let tripData = {};
+    let logs = [];
+    const BAR_TO_LITER = 4.5;
+
+    function openModal(id){ document.getElementById(id).classList.remove("hidden"); }
+    function closeModal(id){ document.getElementById(id).classList.add("hidden"); }
+
+    document.getElementById("startTripBtn").onclick = () => openModal("startTripModal");
+    document.getElementById("endTripBtn").onclick = () => openModal("endTripModal");
+
+    document.getElementById("startTripForm").onsubmit = (e) => {
+      e.preventDefault();
+      const odo = parseFloat(document.getElementById("startOdo").value);
+      const bars = parseFloat(document.getElementById("startFuelBars").value);
+      tripData = {
+        startOdo: odo,
+        startBars: bars,
+        fuelEntries: [],
+        miscEntries: []
+      };
+      logs = [{ type:"info", msg:`Trip started at ${odo} km, Fuel Bars: ${bars}` }];
+      document.getElementById("logs").classList.remove("hidden");
+      renderLogs();
+      localStorage.setItem("tripData", JSON.stringify(tripData));
+      closeModal("startTripModal");
+    };
+
+    document.getElementById("fuelForm").onsubmit = (e) => {
+      e.preventDefault();
+      if (!tripData.startOdo){ alert("Start trip first!"); return; }
+      const odo = parseFloat(document.getElementById("fuelOdo").value);
+      const liters = parseFloat(document.getElementById("fuelLiters").value);
+      const price = parseFloat(document.getElementById("fuelPrice").value);
+      tripData.fuelEntries.push({ odo, liters, price });
+      logs.push({ type:"fuel", msg:`Fuel: ${liters} L at ₹${price}/L (Odo: ${odo})` });
+      renderLogs();
+      localStorage.setItem("tripData", JSON.stringify(tripData));
+      e.target.reset();
+    };
+
+    document.getElementById("miscForm").onsubmit = (e) => {
+      e.preventDefault();
+      if (!tripData.startOdo){ alert("Start trip first!"); return; }
+      const type = document.getElementById("expenseType").value;
+      const amount = parseFloat(document.getElementById("expenseAmount").value);
+      tripData.miscEntries.push({ type, amount });
+      logs.push({ type:"misc", msg:`${type}: ₹${amount}` });
+      renderLogs();
+      localStorage.setItem("tripData", JSON.stringify(tripData));
+      e.target.reset();
+    };
+
+    document.getElementById("endTripForm").onsubmit = (e) => {
+      e.preventDefault();
+      const endOdo = parseFloat(document.getElementById("endOdo").value);
+      const endBars = parseFloat(document.getElementById("endFuelBars").value);
+      tripData.endOdo = endOdo;
+      tripData.endBars = endBars;
+      logs.push({ type:"info", msg:`Trip ended at ${endOdo} km, Fuel Bars: ${endBars}` });
+      renderLogs();
+
+      // Compute Summary
+      const distance = endOdo - tripData.startOdo;
+      const startFuel = tripData.startBars * BAR_TO_LITER;
+      const endFuel = endBars * BAR_TO_LITER;
+      const fuelUsed = (tripData.fuelEntries.reduce((s,f)=>s+f.liters,0) + startFuel - endFuel);
+      const avgPrice = tripData.fuelEntries.length ? (tripData.fuelEntries.reduce((s,f)=>s+(f.price),0)/tripData.fuelEntries.length) : 0;
+      const fuelCost = tripData.fuelEntries.reduce((s,f)=>s+(f.liters*f.price),0) + (startFuel-endFuel)*avgPrice;
+
+      const miscTotals = {};
+      let miscTotal = 0;
+      tripData.miscEntries.forEach(m => {
+        miscTotals[m.type] = (miscTotals[m.type]||0) + m.amount;
+        miscTotal += m.amount;
+      });
+
+      const totalExpense = fuelCost + miscTotal;
+      const economy = fuelUsed > 0 ? (distance/fuelUsed).toFixed(2) : "N/A";
+
+      let summaryHtml = `<p><strong>Total Distance:</strong> ${distance} km</p>`;
+      summaryHtml += `<p><strong>Total Fuel Used:</strong> ${fuelUsed.toFixed(2)} L</p>`;
+      summaryHtml += `<p><strong>Fuel Cost:</strong> ₹${fuelCost.toFixed(2)}</p>`;
+      for (const [type, amt] of Object.entries(miscTotals)){
+        summaryHtml += `<p><strong>${type}:</strong> ₹${amt.toFixed(2)}</p>`;
+      }
+      summaryHtml += `<p><strong>Total Expense:</strong> ₹${totalExpense.toFixed(2)}</p>`;
+      summaryHtml += `<p><strong>Fuel Economy:</strong> ${economy} km/L</p>`;
+
+      document.getElementById("summaryContent").innerHTML = summaryHtml;
+      document.getElementById("summary").classList.remove("hidden");
+
+      localStorage.removeItem("tripData");
+      closeModal("endTripModal");
+    };
+
+    function renderLogs(){
+      const list = document.getElementById("logList");
+      list.innerHTML = "";
+      logs.forEach(l => {
+        const li = document.createElement("li");
+        li.textContent = l.msg;
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById("copySummaryBtn").onclick = () => {
+      const text = document.getElementById("summaryContent").innerText;
+      navigator.clipboard.writeText(text).then(() => alert("Summary copied!"));
+    };
+  </script>
+</body>
+</html>
